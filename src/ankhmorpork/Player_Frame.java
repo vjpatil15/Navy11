@@ -2,218 +2,93 @@ package ankhmorpork;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.Rectangle2D;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import javax.swing.AbstractButton;
 import javax.swing.JComboBox;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicComboBoxEditor;
 
-public class Player_Frame extends JTextField implements KeyListener,
-DocumentListener {
-private ArrayList<String> possibilities;
-private int currentGuess;
-private Color incompleteColor;
-private boolean areGuessing;
-private boolean caseSensitive;
+public class Player_Frame implements ActionListener{
+	
+	   JFrame myFrame = null;
+	   JEditorPane myPane = null;
 
-/**
-* Constructs a new AutoCompleteTextField with the 5 columns by default and
-* no case sensitivity on comparisons of guesses to entered text.
-*/
-public Player_Frame() {
-this(5, false);
-}
+	   public void Viewer(String dataToView) {
+	      myFrame = new JFrame("Ankh_Morpork View Game State");
+	      myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	      myFrame.setSize(700,500);
+	      
+	      myPane = new JEditorPane();
+	      myPane.setContentType("text/plain");
+	      myPane.setText(dataToView);
+	      myFrame.setContentPane(myPane);
+	      
+	      JMenuBar myBar = new JMenuBar();
+	      JMenu myMenu = getFileMenu();
+	      myBar.add(myMenu); 
+	      myFrame.setJMenuBar(myBar);
+	      myFrame.setVisible(true);
+	   }
+	   private JMenu getFileMenu() {
+	      JMenu myMenu = new JMenu("File");
+	      
+	      JMenuItem myItem = new JMenuItem("Exit");
+	      myItem.addActionListener(this);
+	      myMenu.add(myItem);
+	      /*
+	      
+	      myItem = new JMenuItem("Edit");
+	      myItem.addActionListener(this);
+	      myMenu.add(myItem);
+	      
+	      myItem = new JMenuItem("Save");
+	      myItem.addActionListener(this);
+	      myMenu.add(myItem);
+	      */
+	      
+	      return myMenu;
+	   }
+	   public void actionPerformed(ActionEvent e) {
+	      String cmd = ((AbstractButton) e.getSource()).getText();
+	      try {
+	         if (cmd.equals("Open")) {
+	            FileReader in = new FileReader("JEditorPane.txt");
+	            char[] buffer = new char[1024];
+	            int n = in.read(buffer);
+	            String text = new String(buffer, 0, n);
+	            myPane.setText(text);
+	            in.close();
+	         } else if (cmd.equals("Save")) {
+	            FileWriter out = new FileWriter("JEditorPane.txt");
+	            out.write(myPane.getText());
+	            out.close();
+	         } else if (cmd.equals("Exit")){
+	        	 myFrame.setVisible(false);
+	         }
+	      } catch (Exception f) {
+	      	 f.printStackTrace();
+	      }
+	   }
+	}
+	
 
-/**
-* Constructs a new AutoCompleteTextField with the specified number of
-* columns with no case sensitivity when comparing the current guess to the
-* text entered.
-* @param columns The number of columns you wish for the width of this AutoCompleteTextField.
-*/
-public Player_Frame(int columns) {
-this(columns, false);
-}
 
-/**
-* Creates a new AutoCompleteTextField with the given number of columns in
-* width and the setting for case sensitivity when comparing the current
-* guess to the entered text.
-* @param columns The number of columns of text for this component.
-* @param caseSensitive <code>true</code> or <code>false</code> depending on if you want comparisons to be case sensitive or not.
-*/
-public Player_Frame(int columns, boolean caseSensitive) {
-super.setColumns(columns);
-this.possibilities = new ArrayList<String>();
-this.incompleteColor = Color.GRAY.brighter();
-this.currentGuess = -1;
-this.areGuessing = false;
-this.caseSensitive = caseSensitive;
-this.addKeyListener(this);
-this.getDocument().addDocumentListener(this);
-}
-
-/** Add a new possibility to the list of possibilities.
-* Add a new possibility to the list of possibilities for the
-* AutoCommpleteTextField to process.
-* @param possibility The new possibility to add.
-*/
-public void addPossibility(String possibility) {
-this.possibilities.add(possibility);
-Collections.sort(possibilities);
-}
-
-/** Removes a possibility from the list of possibilities.
-* Removes the given possibility from the list of possibilities so that it
-* will no longer be matched.
-* @param possibility The possibility to remove.
-*/
-public void removePossibility(String possibility) {
-this.possibilities.remove(possibility);
-}
-
-/** Removes all possibilities in the list.
-* Removes every possibility in the list and starts over with an empty list
-* ready for new possibilities to be added.
-*/
-public void removeAllPossibilities() {
-this.possibilities = new ArrayList<String>();
-}
-
-/** Sets the color to draw the incomplete guess in.
-* This sets the color that the incomplete guess text is drawn in.
-* @param incompleteColor The new color to draw the incomplete guess with.
-*/
-public void setIncompleteColor(Color incompleteColor) {
-this.incompleteColor = incompleteColor;
-}
-
-/** Returns the current guess from the list of possibilities.
-* Returns the string at the location of the current guess in the list of 
-* possibilities.
-* @return The current guess as a String.
-*/
-private String getCurrentGuess() {
-if (this.currentGuess != -1)
-return this.possibilities.get(this.currentGuess);
-
-return this.getText();
-}
-
-/**
-* Changes the current case sensitive setting to the given setting.
-* @param caseSensitive <code>true</code> or <code>false</code> depending on if you want comparisons to be case sensitive or not.
-*/
-public void setCaseSensitive(boolean caseSensitive) {
-this.caseSensitive = caseSensitive;
-}
-
-private void findCurrentGuess() {
-String entered = this.getText();
-if (!this.caseSensitive)
-entered = entered.toLowerCase();
-
-for (int i = 0; i < this.possibilities.size(); i++) {
-currentGuess = -1;
-
-String possibility = this.possibilities.get(i);
-if (!this.caseSensitive)
-    possibility = possibility.toLowerCase();
-if (possibility.startsWith(entered)) {
-    this.currentGuess = i;
-    break;
-}
-}
-}
-
-@Override
-public void setText(String text) {
-super.setText(text);
-this.areGuessing = false;
-this.currentGuess = -1;
-}
-
-@Override
-public void paintComponent(Graphics g) {
-String guess = this.getCurrentGuess();
-String drawGuess = guess;
-
-super.paintComponent(g);
-String entered = this.getText();
-Rectangle2D enteredBounds = g.getFontMetrics().getStringBounds(entered, g);
-
-if (!(this.caseSensitive)) {
-entered = entered.toLowerCase();
-guess = guess.toLowerCase();
-}
-
-if (!(guess.startsWith(entered)))
-this.areGuessing = false;
-
-if (entered != null && !(entered.equals("")) 
-    && this.areGuessing) {
-String subGuess = drawGuess.substring(entered.length(), drawGuess.length());
-Rectangle2D subGuessBounds = g.getFontMetrics().getStringBounds(drawGuess, g);
-
-int centeredY = ((getHeight() / 2) + (int)(subGuessBounds.getHeight() / 2));
-
-g.setColor(this.incompleteColor);
-g.drawString(subGuess + "   press ENTER to send or \u2192 to fill", (int)(enteredBounds.getWidth()) + 2, centeredY - 2);
-}
-}
-
-public void keyTyped(KeyEvent e) { }
-
-public void keyPressed(KeyEvent e) { 
-if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-if (this.areGuessing) {
-    this.setText(this.getCurrentGuess());
-    this.areGuessing = false;
-}
-}
-
-if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-if (this.areGuessing) {
-    this.setText(this.getCurrentGuess());
-    this.areGuessing = false;
-    e.consume();
-}
-}
-}
-
-public void keyReleased(KeyEvent e) { }
-
-public void insertUpdate(DocumentEvent e) {
-String temp = this.getText();
-
-if (temp.length() == 1)
-this.areGuessing = true;
-
-if (this.areGuessing)
-this.findCurrentGuess();
-
-}
-
-public void removeUpdate(DocumentEvent e) {
-String temp = this.getText();
-
-if (!(this.areGuessing))
-this.areGuessing = true;
-
-if (temp.length() == 0)
-this.areGuessing = false;
-else if (this.areGuessing) {
-this.findCurrentGuess();
-}
-}
-
-public void changedUpdate(DocumentEvent e) { }
-}
 
 
 

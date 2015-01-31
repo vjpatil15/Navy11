@@ -177,6 +177,8 @@ public class discworldboard extends Component {
 		repaint();
 	}
 	
+	
+	
 	public void ViewGameState(){
 		String viewStateData = ViewFileAmbg.ViewState();
 		SaveFileAmbg abc = new SaveFileAmbg();
